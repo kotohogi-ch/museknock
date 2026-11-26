@@ -37,10 +37,12 @@ export async function handleMcp(
   inbox: DeliveryControls,
   role: McpRole,
 ): Promise<Response> {
-  const origin = request.headers.get('Origin')
-  if (origin !== null && origin !== new URL(request.url).origin) {
-    return new Response('Forbidden origin', { status: 403 })
-  }
+  // Local patch (kotohogi-ch deployment, 2026-11-26): the upstream Origin
+  // rejection is removed. Muse's custom-connector egress sends requests
+  // with its own Origin header, so every authenticated connector call was
+  // rejected with 403 before reaching a tool. The /mcp route stays gated by
+  // the Bearer-token role middleware in index.ts (401 on failure), which
+  // runs before this handler.
   if (request.method !== 'POST') {
     return new Response(null, { status: 405, headers: { Allow: 'POST' } })
   }
